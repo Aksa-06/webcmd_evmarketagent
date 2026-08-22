@@ -51,6 +51,23 @@ cli({
 
     const retrievedAt = new Date().toISOString();
 
+    const hyundaiUrl =
+      'https://www.hyundai.com/in/en/find-a-car/creta-electric/price';
+
+    await page.goto(hyundaiUrl, {
+      waitUntil: 'domcontentloaded'
+    });
+
+    await page.evaluate(
+      () => new Promise(resolve => setTimeout(resolve, 5000)));
+
+    const hyundaiHtml = await page.evaluate(
+      () => document.documentElement.outerHTML);
+    const hyundaiPriceMatch = hyundaiHtml.match(
+      /"price"\s*:\s*"(\d+)"/
+    );
+    const hyundaiText = await page.evaluate(() => document.body.innerText);
+
     return [
       {
         manufacturer: 'Tata Motors',
@@ -60,6 +77,17 @@ cli({
         source_url: url,
         retrieved_at: retrievedAt,
         raw_text_sample: text.slice(0, 1500)
+      },
+      {
+        manufacturer: 'Hyundai',
+        vehicle: 'CRETA Electric',
+        price: hyundaiPriceMatch
+          ? Number(hyundaiPriceMatch[1])
+          : null,
+        source: 'Hyundai India official website',
+        source_url: hyundaiUrl,
+        retrieved_at: new Date().toISOString(),
+        raw_text_sample: hyundaiText.slice(0, 1500)
       }
     ].slice(0, kwargs.limit);
   },
